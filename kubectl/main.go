@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"net/http"
+	// "strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -38,6 +39,22 @@ func deleteContainer(contId string) string {
 	return outStop.String()
 }
 
+func runningContainersCount() string {
+	cmdCount := exec.Command("/bin/sh", "-c", "docker ps -q | wc -l")
+	var outCount strings.Builder
+	cmdCount.Stdout = &outCount
+	err := cmdCount.Run()
+	if err != nil {
+		return "Failed to fetch containers"
+	}
+	
+	return outCount.String() 
+}
+
+func runningContainersCountRoute(c echo.Context) error {
+	return c.String(http.StatusOK, runningContainersCount())
+}
+
 func createContainerRoute(c echo.Context) error {
   	// User ID from path `users/:id`
   	port := c.Param("port")
@@ -58,7 +75,10 @@ func Notes() {
 	// To count the number of containers running 
 	//docker ps -q | wc -l
 	//docker ps | grep imagename | wc -l
-
+	//docker inspect --format='{{.Config.Image}}' $(docker ps -q) | grep imagename | wc -l
+	
+	// To convert num to string
+	// count, err := strconv.Atoi(outCount.String())
 }
 
 func main() {
@@ -67,6 +87,8 @@ func main() {
 	e.GET("/", helloWorldRoute)
 	e.GET("/create/container/:port/:name", createContainerRoute)
 	e.GET("/delete/container/:id", deleteContainerRoute)
+	e.GET("/count/containers", runningContainersCountRoute)
+
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
