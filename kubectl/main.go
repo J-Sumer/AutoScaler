@@ -5,8 +5,9 @@ import (
 	"log"
 	"os/exec"
 	"strings"
-	"time"
-	"reflect"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 func createContainer(port string, containerName string) string {
@@ -23,7 +24,7 @@ func createContainer(port string, containerName string) string {
 	return out.String()
 }
 
-func stopContainer(contId string) string {
+func deleteContainer(contId string) string {
 	fmt.Println("Start: container stop: \n")
 	fmt.Println(contId)
 	cmdStop := exec.Command("docker", "stop", contId)
@@ -32,21 +33,40 @@ func stopContainer(contId string) string {
 	fmt.Println("Stopping container\n")
 	err := cmdStop.Run()
 	if err != nil {
-		log.Fatal(err)
+		return "Failed to stop container"
 	}
-	return out.String()
+	return outStop.String()
+}
+
+func createContainerRoute(c echo.Context) error {
+  	// User ID from path `users/:id`
+  	port := c.Param("port")
+  	name := c.Param("name")
+	return c.String(http.StatusOK, createContainer(port, name))
+}
+
+func deleteContainerRoute(c echo.Context) error {
+	id := c.Param("id")
+	return c.String(http.StatusOK, deleteContainer(id))
+}
+
+func helloWorldRoute(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello World")
+}
+
+func Notes() {
+	// To count the number of containers running 
+	//docker ps -q | wc -l
+	//docker ps | grep imagename | wc -l
+
 }
 
 func main() {
 
-	// Create container
-	id := createContainer("8001", "node-app")
+	e := echo.New()
+	e.GET("/", helloWorldRoute)
+	e.GET("/create/container/:port/:name", createContainerRoute)
+	e.GET("/delete/container/:id", deleteContainerRoute)
 
-	time.Sleep(1 * time.Second)
-	fmt.Println("Trying to stop container: " + id)
-	fmt.Println("", reflect.TypeOf(id))
-	// stopContainer(""+id)
-	// stopContainer("b5ecdd2605b2772f454632524c75d2610471d4c7b286e0be920bc6d87a975104")
-
-	// fmt.Println(id)
+	e.Logger.Fatal(e.Start(":8000"))
 }
