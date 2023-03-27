@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"net/http"
+	"time"
 	// "strconv"
 
 	"github.com/labstack/echo/v4"
@@ -51,6 +52,21 @@ func runningContainersCount() string {
 	return outCount.String() 
 }
 
+func getCPUMetric() string {
+	start := time.Now()
+	cmdCPU := exec.Command("/bin/sh", "-c", "./statCollect.sh")
+	// cmdCPU := exec.Command("/bin/sh", "-c", "free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }'")
+	var outCPU strings.Builder
+	cmdCPU.Stdout = &outCPU
+	err := cmdCPU.Run()
+	if err != nil {
+		return "Failed to fetch CPU metrics"
+	}
+	duration := time.Since(start)
+	fmt.Println("Time to get stats: ", duration)
+	return outCPU.String()
+}
+
 func runningContainersCountRoute(c echo.Context) error {
 	return c.String(http.StatusOK, runningContainersCount())
 }
@@ -71,6 +87,12 @@ func helloWorldRoute(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello World")
 }
 
+
+
+func metricsRoute(c echo.Context) error {
+	return c.String(http.StatusOK, getCPUMetric())
+}
+
 func Notes() {
 	// To count the number of containers running 
 	//docker ps -q | wc -l
@@ -88,7 +110,7 @@ func main() {
 	e.GET("/create/container/:port/:name", createContainerRoute)
 	e.GET("/delete/container/:id", deleteContainerRoute)
 	e.GET("/count/containers", runningContainersCountRoute)
-
+	e.GET("/metrics", metricsRoute)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
