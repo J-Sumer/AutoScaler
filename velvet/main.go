@@ -18,7 +18,7 @@ func Notes() {
 }
 
 func main() {
-	docker.CollectMetric()
+	go docker.MetricExporter(15)
 	e := echo.New()
 	e.GET("/", routes.HelloWorldRoute)
 	e.GET("/container/create/:port/:name", routes.CreateContainerRoute)
@@ -26,7 +26,6 @@ func main() {
 	e.GET("/container/count", routes.RunningContainersCountRoute)
 	e.GET("/metrics", routes.MetricsRoute)
 	e.GET("/addMetric/:cpu/:memory", routes.AddMetricEntryRoute)
-
 
 	// Run a go routine that collect metrics of the containers every x seconds
 

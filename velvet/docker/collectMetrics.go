@@ -44,7 +44,7 @@ func getStats(cli *client.Client, ctx context.Context,containerID string, channe
 	channel <- metric
 }
 
-func CollectMetric() {
+func CollectMetric() (float32, float32) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	ctx := context.Background()
 	if err != nil {
@@ -78,5 +78,5 @@ func CollectMetric() {
 	fmt.Println("CPU", (CPUMetric/float32(len(containers))))
 
 	// send data to influxDB
-	
+	return MemoryMetric, CPUMetric
 }
