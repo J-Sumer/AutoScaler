@@ -1,0 +1,25 @@
+------ Return JSON from docker API for stats -------
+{
+  "memory_stats": {
+    "stats": {
+      "cache": 0
+    },
+    "max_usage": 6651904,
+    "usage": 6537216,
+    "limit": 67108864
+  },
+  "cpu_stats": {
+    "cpu_usage": {
+      "total_usage": 100215355
+    },
+    "system_cpu_usage": 739306590000000,
+    "online_cpus": 4
+  },
+  "precpu_stats": {
+    "cpu_usage": {
+      "total_usage": 100093996
+    },
+    "system_cpu_usage": 9492140000000,
+    "online_cpus": 4
+  }
+}

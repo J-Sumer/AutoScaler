@@ -1,0 +1,55 @@
+package dockerAPI
+
+import (
+	"time"
+)
+
+func say(s int, c chan int) {
+	for i := 0; i < 5; i++ {
+		time.Sleep(100 * time.Millisecond)
+		// fmt.Println(s)
+	}
+	c <- s
+	// close(c)
+}
+
+// func main() {
+// 	channel := make(chan int)
+// 	for _, channel := range channels {
+// 		go say("world", channel)
+// 	}
+// 	// go say("world")
+// 	// say("hello")
+// 	// sum := 0
+// 	array := make([]int, 1)
+// 	for i, channel := range channels {
+// 		array[i] = <- channel
+// 		// sum = sum + <- channel
+// 	}
+// 	for _, a := range array {
+// 		fmt.Println(a)
+// 	}
+// 	// fmt.Println(sum)
+	
+// }
+
+// func rou(c chan int, num ) {
+// 	c <- num
+// }
+
+// func main() {
+// 	channel := make(chan int)
+
+// 	for i:=0 ; i<5; i++ {
+// 		go rou(channel, "")
+// 	}
+	
+// 	res := ""
+
+// 	for i:=0 ; i<5; i++ {
+// 		res = res + <- channel
+// 	}
+
+// 	// res = res + <- channel
+// 	fmt.Println(res)
+// }

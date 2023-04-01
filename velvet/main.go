@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,7 +120,9 @@ func helloWorldRoute(c echo.Context) error {
 }
 
 func addMetricEntryRoute(c echo.Context) error {
-	return c.String(http.StatusOK, AddMetricEntry(50, 100))
+	cpu, _ := strconv.Atoi(c.Param("cpu"))
+	memory, _ := strconv.Atoi(c.Param("memory"))
+	return c.String(http.StatusOK, AddMetricEntry(cpu, memory))
 }
 
 func metricsRoute(c echo.Context) error {
@@ -143,7 +146,10 @@ func main() {
 	e.GET("/delete/container/:id", deleteContainerRoute)
 	e.GET("/count/containers", runningContainersCountRoute)
 	e.GET("/metrics", metricsRoute)
-	e.GET("/addMetric", addMetricEntryRoute)
+	e.GET("/addMetric/:cpu/:memory", addMetricEntryRoute)
+
+
+	// Run a go routine that collect metrics of the containers every x seconds
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
