@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/J-Sumer/AutoScaler/velvet/docker"
+
 	// "strconv"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -140,6 +142,7 @@ func Notes() {
 }
 
 func main() {
+	docker.CollectMetric()
 	e := echo.New()
 	e.GET("/", helloWorldRoute)
 	e.GET("/create/container/:port/:name", createContainerRoute)

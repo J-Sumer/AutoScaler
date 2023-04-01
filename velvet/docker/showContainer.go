@@ -1,11 +1,12 @@
-package main
+package docker
 
 import (
 	"context"
-	stypes "dockerAPI/types"
 	"encoding/json"
 	"fmt"
 	"io"
+
+	stypes "github.com/J-Sumer/AutoScaler/velvet/docker/types"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -43,7 +44,7 @@ func getStats(cli *client.Client, ctx context.Context,containerID string, channe
 	channel <- metric
 }
 
-func main() {
+func CollectMetric() {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	ctx := context.Background()
 	if err != nil {
