@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	// "github.com/J-Sumer/AutoScaler/velvet/routes"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
-
 
 var URL = "http://152.7.179.7:8086"
 var TOKEN = "TOKEN"
@@ -18,21 +18,24 @@ var ORG = "NCSU"
 var BUCKET = "ADS"
 
 func AddMetricEntry(cpu int, memory int) string{
+	// Get Metrics from locust
+	RPS, MRT := GetLocustMetrics()
+
     // Create a new client using an InfluxDB server base URL and an authentication token
-	fmt.Println("Creating URL")
+	// fmt.Println("Creating URL")
     client := influxdb2.NewClient(URL, TOKEN)
-	fmt.Println("Creating WriteAPI")
+	// fmt.Println("Creating WriteAPI")
     // Use blocking write client for writes to desired bucket
     writeAPI := client.WriteAPIBlocking(ORG, BUCKET)
     // Create point using full params constructor
     p := influxdb2.NewPoint("metric",
 	map[string]string{"type": "stats"},
-	map[string]interface{}{"cpu": cpu, "mem": memory},
+	map[string]interface{}{"cpu": cpu, "mem": memory, "RPS": RPS, "MRT": MRT},
 	time.Now())
     // write point immediately
-	fmt.Println("Writing started")
+	// fmt.Println("Writing started")
     writeAPI.WritePoint(context.Background(), p)
-	fmt.Println("Writing completed")
+	// fmt.Println("Writing completed")
 
     // Ensures background processes finishes
     client.Close()

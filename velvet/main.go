@@ -27,6 +27,8 @@ func main() {
 	e.GET("/metrics", routes.MetricsRoute)
 	e.GET("/addMetric/:cpu/:memory", routes.AddMetricEntryRoute)
 
+	//routes.GetLocustMetrics()
+
 	// Run a go routine that collect metrics of the containers every x seconds
 
 	e.Logger.Fatal(e.Start(":8000"))

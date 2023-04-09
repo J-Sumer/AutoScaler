@@ -74,9 +74,9 @@ func CollectMetric() (float32, float32) {
 		MemoryMetric += metric.Memory
 		CPUMetric += metric.CPU
 	}
-	fmt.Println("Memory", (MemoryMetric/float32(len(containers))))
-	fmt.Println("CPU", (CPUMetric/float32(len(containers))))
+	// fmt.Println("Memory", (MemoryMetric/float32(len(containers))))
+	// fmt.Println("CPU", (CPUMetric/float32(len(containers))))
 
 	// send data to influxDB
-	return MemoryMetric, CPUMetric
+	return CPUMetric, MemoryMetric
 }
