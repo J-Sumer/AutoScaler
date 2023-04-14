@@ -10,6 +10,7 @@ import (
 	// "github.com/J-Sumer/AutoScaler/velvet/routes"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/phayes/freeport"
 )
 
 var URL = "http://152.7.179.7:8086"
@@ -44,6 +45,11 @@ func AddMetricEntry(cpu int, memory int) string{
 
 
 func CreateContainer(port string, containerName string) string {
+	port1, e := freeport.GetFreePort()
+	fmt.Println("Free port", port1)
+	if e != nil {
+		log.Fatal(e)
+	}
 	portBind := port + ":8000"
 	cmd := exec.Command("docker", "run", "--rm", "-p", portBind, "-d", containerName)
 	var out strings.Builder

@@ -6,6 +6,7 @@ require (
 	github.com/docker/docker v23.0.2+incompatible
 	github.com/influxdata/influxdb-client-go/v2 v2.12.3
 	github.com/labstack/echo/v4 v4.10.2
+	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 )
 
 require (
