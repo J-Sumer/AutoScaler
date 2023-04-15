@@ -11,11 +11,15 @@ func RunningContainersCountRoute(c echo.Context) error {
 	return c.String(http.StatusOK, RunningContainersCount())
 }
 
+func GetContainerMapping(c echo.Context) error {
+	return c.String(http.StatusOK, ContainerMappingMap())
+}
+
 func CreateContainerRoute(c echo.Context) error {
   	// User ID from path `users/:id`
-  	port := c.Param("port")
+  	// port := c.Param("port")
   	name := c.Param("name")
-	return c.String(http.StatusOK, CreateContainer(port, name))
+	return c.String(http.StatusOK, CreateContainer(name))
 }
 
 func DeleteContainerRoute(c echo.Context) error {

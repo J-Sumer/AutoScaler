@@ -7,10 +7,13 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"strconv"
 	// "github.com/J-Sumer/AutoScaler/velvet/routes"
+	"github.com/J-Sumer/AutoScaler/velvet/utils"
+	"github.com/J-Sumer/AutoScaler/velvet/portStorage"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
-	"github.com/phayes/freeport"
+	storage "github.com/J-Sumer/AutoScaler/velvet/portStorage"
 )
 
 var URL = "http://152.7.179.7:8086"
@@ -44,13 +47,13 @@ func AddMetricEntry(cpu int, memory int) string{
 }
 
 
-func CreateContainer(port string, containerName string) string {
-	port1, e := freeport.GetFreePort()
-	fmt.Println("Free port", port1)
+func CreateContainer(containerName string) string {
+	port, e := utils.GetFreePort()
+	fmt.Println("Free port", port)
 	if e != nil {
 		log.Fatal(e)
 	}
-	portBind := port + ":8000"
+	portBind := strconv.Itoa(port) + ":8000"
 	cmd := exec.Command("docker", "run", "--rm", "-p", portBind, "-d", containerName)
 	var out strings.Builder
 	cmd.Stdout = &out
@@ -59,13 +62,19 @@ func CreateContainer(port string, containerName string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Container created with ID", out.String())
-	return out.String()
+	storage.AddToMap(port, out.String())
+	fmt.Println("Container created with ID", out.String(), " and port", port)
+	// return out.String()
+
+	// return port
+	return strconv.Itoa(port)
 }
 
-func DeleteContainer(contId string) string {
+func DeleteContainer(port string) string {
 	fmt.Println("Start: container stop:")
-	fmt.Println(contId)
+	fmt.Println(port)
+	portStr, _ := strconv.Atoi(port)
+	contId := storage.GetFromMap(portStr)
 	cmdStop := exec.Command("docker", "stop", contId)
 	var outStop strings.Builder
 	cmdStop.Stdout = &outStop
@@ -102,4 +111,11 @@ func GetCPUMetric() string {
 	duration := time.Since(start)
 	fmt.Println("Time to get stats: ", duration)
 	return outCPU.String()
+}
+
+func ContainerMappingMap() string {
+
+	fmt.Println(portStorage.PortMapping)
+
+	return ""
 }
