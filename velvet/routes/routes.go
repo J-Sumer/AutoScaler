@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"context"
+	// "context"
 	"fmt"
 	"log"
 	"os/exec"
@@ -14,6 +14,7 @@ import (
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	storage "github.com/J-Sumer/AutoScaler/velvet/portStorage"
+	stypes "github.com/J-Sumer/AutoScaler/velvet/docker/types"
 )
 
 var URL = "http://152.7.179.7:8086"
@@ -21,26 +22,49 @@ var TOKEN = "TOKEN"
 var ORG = "NCSU"
 var BUCKET = "ADS"
 
-func AddMetricEntry(cpu int, memory int) string{
+func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) string{
 	// Get Metrics from locust
 	RPS, MRT := GetLocustMetrics()
 
     // Create a new client using an InfluxDB server base URL and an authentication token
 	// fmt.Println("Creating URL")
-    client := influxdb2.NewClient(URL, TOKEN)
+    client := influxdb2.NewClientWithOptions(URL, TOKEN, influxdb2.DefaultOptions().SetBatchSize(20))
 	// fmt.Println("Creating WriteAPI")
     // Use blocking write client for writes to desired bucket
-    writeAPI := client.WriteAPIBlocking(ORG, BUCKET)
+    writeAPI := client.WriteAPI(ORG, BUCKET)
+
+	
     // Create point using full params constructor
-    p := influxdb2.NewPoint("metric",
-	map[string]string{"type": "stats"},
-	map[string]interface{}{"cpu": cpu, "mem": memory, "RPS": RPS, "MRT": MRT},
-	time.Now())
+	tag := map[string]string{"type": "stats"}
+	fields := map[string]interface{}{}
+	fields["cpu"] = cpu
+	fields["mem"] = memory
+	fields["RPS"] = RPS
+	fields["MRT"] = MRT
+
+    p := influxdb2.NewPoint("metric", tag, fields, time.Now())
+
     // write point immediately
 	// fmt.Println("Writing started")
-    writeAPI.WritePoint(context.Background(), p)
+    writeAPI.WritePoint(p)
 	// fmt.Println("Writing completed")
 
+	// Create point for each container
+	for i :=0; i<len(AllMetrics.AllMetrics); i++ {
+		containerMetricDetails := AllMetrics.AllMetrics[i]
+		containerTag := map[string]string{}
+		containerTag["type"] = "container"
+		containerTag["id"] =  containerMetricDetails.ContainerId
+
+		containerFields := map[string]interface{}{}
+		containerFields["cpu"] = containerMetricDetails.CPU
+		containerFields["mem"] = containerMetricDetails.Memory
+		p := influxdb2.NewPoint("metric", containerTag, containerFields, time.Now())
+		writeAPI.WritePoint(p)
+	}
+
+	// Force all unwritten data to be sent
+    writeAPI.Flush()
     // Ensures background processes finishes
     client.Close()
 	return "Added Entry in DB"
@@ -95,7 +119,7 @@ func RunningContainersCount() string {
 		return "Failed to fetch containers"
 	}
 	
-	return outCount.String() 
+	return outCount.String()
 }
 
 func GetCPUMetric() string {

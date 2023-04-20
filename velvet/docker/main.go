@@ -6,9 +6,9 @@ import (
 )
 
 func CollectAndAddMetrics() {
-	cpu, memeory := CollectMetric()
+	cpu, memeory, ContainerMetrics := CollectMetric()
 	// Export metrics 
-	routes.AddMetricEntry(int(cpu), int(memeory))
+	routes.AddMetricEntry(int(cpu), int(memeory), ContainerMetrics)
 }
 
 func MetricExporter(sec time.Duration) {

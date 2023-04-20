@@ -1,6 +1,7 @@
 package types
 
 type Metrics struct {
+	ContainerId string `json:"container_id"`
 	CPU float32
 	Memory float32
 }
@@ -32,4 +33,8 @@ type CompleteStats struct {
     MemoryStats MemoryStats `json:"memory_stats"`
 	CpuStats CPUStats `json:"cpu_stats"`
 	PreCpuStats CPUStats `json:"precpu_stats"`
+}
+
+type ContainerStats struct {
+	AllMetrics []Metrics `json:"metrics"`
 }

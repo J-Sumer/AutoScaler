@@ -38,13 +38,14 @@ func getStats(cli *client.Client, ctx context.Context,containerID string, channe
 	// fmt.Println("Memory usage", MemoryUsage)
 	// fmt.Println("CPU Usage", CPUUsage)
 	metric := stypes.Metrics{
+		ContainerId: containerID,
 		CPU: CPUUsage,
 		Memory: MemoryUsage,
 	}
 	channel <- metric
 }
 
-func CollectMetric() (float32, float32) {
+func CollectMetric() (float32, float32, stypes.ContainerStats) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	ctx := context.Background()
 	if err != nil {
@@ -66,11 +67,13 @@ func CollectMetric() (float32, float32) {
 		go getStats(cli , ctx, containerID, channel)
 	}
 
+	var ContainerMetrics stypes.ContainerStats
 	var MemoryMetric float32
 	var CPUMetric float32
 	for i := 0; i < len(containers); i++ {
 		// fmt.Println(i)
 		metric := <- channel
+		ContainerMetrics.AllMetrics = append(ContainerMetrics.AllMetrics, metric)
 		MemoryMetric += metric.Memory
 		CPUMetric += metric.CPU
 	}
@@ -78,5 +81,5 @@ func CollectMetric() (float32, float32) {
 	// fmt.Println("CPU", (CPUMetric/float32(len(containers))))
 
 	// send data to influxDB
-	return CPUMetric, MemoryMetric
+	return CPUMetric, MemoryMetric, ContainerMetrics
 }
