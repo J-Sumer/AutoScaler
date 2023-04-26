@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "github.com/J-Sumer/AutoScaler/velvet/docker"
+	"github.com/J-Sumer/AutoScaler/velvet/docker"
 
 	"github.com/J-Sumer/AutoScaler/velvet/routes"
 
@@ -20,7 +20,8 @@ func Notes() {
 
 func main() {
 
-	// go docker.MetricExporter(15)
+	go docker.MetricExporter(15)
+	// docker.CollectAndAddMetrics()
 	e := echo.New()
 	e.GET("/", routes.HelloWorldRoute)
 	// e.GET("/container/create/:port/:name", routes.CreateContainerRoute)
@@ -28,12 +29,13 @@ func main() {
 	e.GET("/container/delete/:id", routes.DeleteContainerRoute)
 	e.GET("/container/count", routes.RunningContainersCountRoute)
 	e.GET("/container/mapping", routes.GetContainerMapping)
+	e.GET("/container/list", routes.GetContainerList)
 	e.GET("/metrics", routes.MetricsRoute)
-	e.GET("/addMetric/:cpu/:memory", routes.AddMetricEntryRoute)
+	// e.GET("/addMetric/:cpu/:memory", routes.AddMetricEntryRoute)
 
 	//routes.GetLocustMetrics()
 
 	// Run a go routine that collect metrics of the containers every x seconds
 
-	// e.Logger.Fatal(e.Start(":8000"))
+	e.Logger.Fatal(e.Start(":8000"))
 }

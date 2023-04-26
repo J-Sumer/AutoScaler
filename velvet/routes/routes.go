@@ -2,19 +2,21 @@ package routes
 
 import (
 	// "context"
+	"bytes"
 	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
+
 	// "github.com/J-Sumer/AutoScaler/velvet/routes"
 	"github.com/J-Sumer/AutoScaler/velvet/utils"
-	"github.com/J-Sumer/AutoScaler/velvet/portStorage"
 
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	// influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	storage "github.com/J-Sumer/AutoScaler/velvet/portStorage"
-	stypes "github.com/J-Sumer/AutoScaler/velvet/docker/types"
+	// stypes "github.com/J-Sumer/AutoScaler/velvet/docker/types"
+	// "github.com/J-Sumer/AutoScaler/velvet/locust"
 )
 
 var URL = "http://152.7.179.7:8086"
@@ -22,68 +24,71 @@ var TOKEN = "TOKEN"
 var ORG = "NCSU"
 var BUCKET = "ADS"
 
-func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) string{
-	// Get Metrics from locust
-	RPS, MRT := GetLocustMetrics()
+// func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) string{
+// 	// Get Metrics from locust
+// 	RPS, MRT := locust.GetLocustMetrics()
 
-    // Create a new client using an InfluxDB server base URL and an authentication token
-	// fmt.Println("Creating URL")
-    client := influxdb2.NewClientWithOptions(URL, TOKEN, influxdb2.DefaultOptions().SetBatchSize(20))
-	// fmt.Println("Creating WriteAPI")
-    // Use blocking write client for writes to desired bucket
-    writeAPI := client.WriteAPI(ORG, BUCKET)
+//     // Create a new client using an InfluxDB server base URL and an authentication token
+// 	// fmt.Println("Creating URL")
+//     client := influxdb2.NewClientWithOptions(URL, TOKEN, influxdb2.DefaultOptions().SetBatchSize(20))
+// 	// fmt.Println("Creating WriteAPI")
+//     // Use blocking write client for writes to desired bucket
+//     writeAPI := client.WriteAPI(ORG, BUCKET)
 
 	
-    // Create point using full params constructor
-	tag := map[string]string{"type": "stats"}
-	fields := map[string]interface{}{}
-	fields["cpu"] = cpu
-	fields["mem"] = memory
-	fields["RPS"] = RPS
-	fields["MRT"] = MRT
+//     // Create point using full params constructor
+// 	tag := map[string]string{"type": "stats"}
+// 	fields := map[string]interface{}{}
+// 	fields["cpu"] = cpu
+// 	fields["mem"] = memory
+// 	fields["RPS"] = RPS
+// 	fields["MRT"] = MRT
 
-    p := influxdb2.NewPoint("metric", tag, fields, time.Now())
+//     p := influxdb2.NewPoint("metric", tag, fields, time.Now())
 
-    // write point immediately
-	// fmt.Println("Writing started")
-    writeAPI.WritePoint(p)
-	// fmt.Println("Writing completed")
+//     // write point immediately
+// 	// fmt.Println("Writing started")
+//     writeAPI.WritePoint(p)
+// 	// fmt.Println("Writing completed")
 
-	// Create point for each container
-	for i :=0; i<len(AllMetrics.AllMetrics); i++ {
-		containerMetricDetails := AllMetrics.AllMetrics[i]
-		containerTag := map[string]string{}
-		containerTag["type"] = "container"
-		containerTag["id"] =  containerMetricDetails.ContainerId
+// 	// Create point for each container
+// 	for i :=0; i<len(AllMetrics.AllMetrics); i++ {
+// 		containerMetricDetails := AllMetrics.AllMetrics[i]
+// 		containerTag := map[string]string{}
+// 		containerTag["type"] = "container"
+// 		containerTag["id"] =  containerMetricDetails.ContainerId
 
-		containerFields := map[string]interface{}{}
-		containerFields["cpu"] = containerMetricDetails.CPU
-		containerFields["mem"] = containerMetricDetails.Memory
-		p := influxdb2.NewPoint("metric", containerTag, containerFields, time.Now())
-		writeAPI.WritePoint(p)
-	}
+// 		containerFields := map[string]interface{}{}
+// 		containerFields["cpu"] = containerMetricDetails.CPU
+// 		containerFields["mem"] = containerMetricDetails.Memory
+// 		p := influxdb2.NewPoint("metric", containerTag, containerFields, time.Now())
+// 		writeAPI.WritePoint(p)
+// 	}
 
-	// Force all unwritten data to be sent
-    writeAPI.Flush()
-    // Ensures background processes finishes
-    client.Close()
-	return "Added Entry in DB"
-}
+// 	// Force all unwritten data to be sent
+//     writeAPI.Flush()
+//     // Ensures background processes finishes
+//     client.Close()
+// 	return "Added Entry in DB"
+// }
 
 
-func CreateContainer(containerName string) string {
+func CreateContainer(containerName string) (CreateContainerReturn) {
 	port, e := utils.GetFreePort()
 	fmt.Println("Free port", port)
 	if e != nil {
 		log.Fatal(e)
 	}
 	portBind := strconv.Itoa(port) + ":8000"
-	cmd := exec.Command("docker", "run", "--rm", "-p", portBind, "-d", containerName)
+	cmd := exec.Command("docker", "run", "--rm", "-p", portBind, "--cpus=0.2", "--memory=200m", "-d", "jsumermaduru/"+containerName)
 	var out strings.Builder
 	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	fmt.Println("Creating container")
 	err := cmd.Run()
 	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		log.Fatal(err)
 	}
 	storage.AddToMap(port, out.String())
@@ -91,7 +96,11 @@ func CreateContainer(containerName string) string {
 	// return out.String()
 
 	// return port
-	return strconv.Itoa(port)
+	ret := CreateContainerReturn{
+		Port: strconv.Itoa(port),
+		ID: out.String()[:12],
+	}
+	return ret
 }
 
 func DeleteContainer(port string) string {
@@ -139,7 +148,7 @@ func GetCPUMetric() string {
 
 func ContainerMappingMap() string {
 
-	fmt.Println(portStorage.PortMapping)
+	fmt.Println(storage.PortMapping)
 
 	return ""
 }

@@ -2,13 +2,13 @@ package docker
 
 import (
 	"time"
-	"github.com/J-Sumer/AutoScaler/velvet/routes"
+	influxdb "github.com/J-Sumer/AutoScaler/velvet/influxDB"
 )
 
 func CollectAndAddMetrics() {
 	cpu, memeory, ContainerMetrics := CollectMetric()
 	// Export metrics 
-	routes.AddMetricEntry(int(cpu), int(memeory), ContainerMetrics)
+	influxdb.AddMetricEntry(int(cpu), int(memeory), ContainerMetrics)
 }
 
 func MetricExporter(sec time.Duration) {

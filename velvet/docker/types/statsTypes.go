@@ -38,3 +38,7 @@ type CompleteStats struct {
 type ContainerStats struct {
 	AllMetrics []Metrics `json:"metrics"`
 }
+
+type ContainerList struct {
+	Containers []string `json:"containers"`
+}

@@ -1,4 +1,4 @@
-package routes
+package locust
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 )
 
 func GetLocustMetrics() (float32, float32) {
-	resp, err := http.Get("http://152.7.179.7:8089/stats/requests")
+	resp, err := http.Get("http://152.7.178.162:8089/stats/requests")
 	var RPS float32 = 0.0
 	var MRS float32 = 0.0
 	if err != nil {
@@ -23,7 +23,7 @@ func GetLocustMetrics() (float32, float32) {
 	}
 	var result types.StatsResponse
 	json.Unmarshal(body1, &result)
-	RPS = result.Stats[0].RPS
-	MRS = result.Stats[0].MedianResponseType
+	RPS = ( result.Stats[1].RPS + result.Stats[2].RPS ) / 2
+	MRS = (result.Stats[1].MedianResponseType + result.Stats[2].MedianResponseType) / 2
 	return RPS, MRS
 }

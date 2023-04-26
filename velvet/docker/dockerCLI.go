@@ -9,8 +9,44 @@ import (
 	stypes "github.com/J-Sumer/AutoScaler/velvet/docker/types"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	spec "github.com/opencontainers/image-spec/specs-go/v1"
 )
+
+func CreateContainer() string {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	ctx := context.Background()
+	if err != nil {
+		panic(err)
+	}
+
+	containerConfig := container.Config{
+		Image: "jsumermaduru/rubis",
+	}
+
+	containerResources := container.Resources{
+		CPUQuota: 20000,
+	}
+
+	hostConfig := container.HostConfig{
+		Resources: containerResources,
+		AutoRemove: true,
+	}
+
+	container, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, &network.NetworkingConfig{}, &spec.Platform{}, "")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Print(container.ID)
+
+	return container.ID
+}
+
+func DeleteContainer() {
+	
+}
 
 func getStats(cli *client.Client, ctx context.Context,containerID string, channel chan stypes.Metrics) {
 	stats, err := cli.ContainerStats(ctx, containerID, false)
@@ -57,12 +93,12 @@ func CollectMetric() (float32, float32, stypes.ContainerStats) {
 		panic(err)
 	}
 
-	fmt.Println(len(containers))
+	// fmt.Println(len(containers))
 
 	channel := make(chan stypes.Metrics)
 
 	for _, container := range containers {
-		containerID := container.ID[:10]
+		containerID := container.ID[:12]
 		// fmt.Printf("%s %s\n", containerID, container.Image)
 		go getStats(cli , ctx, containerID, channel)
 	}
@@ -74,12 +110,34 @@ func CollectMetric() (float32, float32, stypes.ContainerStats) {
 		// fmt.Println(i)
 		metric := <- channel
 		ContainerMetrics.AllMetrics = append(ContainerMetrics.AllMetrics, metric)
-		MemoryMetric += metric.Memory
-		CPUMetric += metric.CPU
+		MemoryMetric += (metric.Memory)
+		CPUMetric += (metric.CPU * 5)
 	}
 	// fmt.Println("Memory", (MemoryMetric/float32(len(containers))))
 	// fmt.Println("CPU", (CPUMetric/float32(len(containers))))
 
 	// send data to influxDB
-	return CPUMetric, MemoryMetric, ContainerMetrics
+	return (CPUMetric/float32(len(containers))), (MemoryMetric/float32(len(containers))) , ContainerMetrics
+}
+
+func RunningContainers() []string {
+
+	var containerList []string
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	ctx := context.Background()
+	if err != nil {
+		panic(err)
+	}
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, container := range containers {
+		containerList = append(containerList, container.ID[:12])
+	}
+
+	return containerList
 }
