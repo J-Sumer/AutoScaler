@@ -44,10 +44,6 @@ func CreateContainer() string {
 	return container.ID
 }
 
-func DeleteContainer() {
-	
-}
-
 func getStats(cli *client.Client, ctx context.Context,containerID string, channel chan stypes.Metrics) {
 	stats, err := cli.ContainerStats(ctx, containerID, false)
 	if err != nil {
@@ -128,6 +124,8 @@ func RunningContainers() []string {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println("Getting list of running containers")
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 

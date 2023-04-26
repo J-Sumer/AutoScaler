@@ -13,7 +13,6 @@ import (
 var URL = "http://152.7.179.7:8086"
 var TOKEN = "TOKEN"
 var ORG = "NCSU"
-// var BUCKET = "ADS"
 var BUCKET = "TrainingData"
 
 func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) string{
@@ -28,6 +27,8 @@ func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) strin
     // writeAPI := client.WriteAPI(ORG, BUCKET)
     writeAPI := client.WriteAPIBlocking(ORG, BUCKET)
 
+	fmt.Println("Adding metrics to influxdb")
+
     // Create point using full params constructor
 	tag := map[string]string{"type": "agrigate"}
 	fields := map[string]interface{}{}
@@ -39,10 +40,7 @@ func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) strin
     p := influxdb2.NewPoint("metrics", tag, fields, time.Now())
 
     // write point immediately
-	// fmt.Println("Writing started")
-    // writeAPI.WritePoint(p)
     writeAPI.WritePoint(context.Background(), p)
-	// fmt.Println("Writing completed")
 
 	// Create point for each container
 	for i :=0; i<len(AllMetrics.AllMetrics); i++ {
@@ -62,55 +60,6 @@ func AddMetricEntry(cpu int, memory int, AllMetrics stypes.ContainerStats) strin
 	    writeAPI.WritePoint(context.Background(), p)
 	}
 
-	fmt.Println("Adding metrics to influxdb")
-
-	// testTag := map[string]string{}
-	// testTag["tag1"] = "testtag1"
-	// testTag["tag2"] = "testtag2"
-
-	// testField := map[string]interface{}{}
-	// testField["field1"] = 10
-	// testField["field2"] = 30
-
-	// p = influxdb2.NewPoint("metric", testTag, testField, time.Now())
-
-	// containerMetricDetails := AllMetrics.AllMetrics[0]
-	// containerTag := map[string]string{}
-	// containerTag["type"] = "containertest"
-	// containerTag["id"] =  containerMetricDetails.ContainerId
-
-	// // containerField := map[string]interface{}{}
-	// // containerField["cpu"] = containerMetricDetails.CPU
-	// // containerField["mem"] = containerMetricDetails.Memory
-
-	// testField := map[string]interface{}{}
-	// testField["cpu"] = 10
-	// testField["mem"] = 30
-
-	// fmt.Println("Adding for container", containerMetricDetails.ContainerId)
-	// fmt.Println("CPU", containerMetricDetails.CPU)
-
-	// p = influxdb2.NewPoint("metric", containerTag, testField, time.Now())
-
-	
-	// fields1 := map[string]interface{}{}
-	// fields1["cpu"] = cpu
-	// fields1["mem"] = memory
-	// fields1["RPS"] = RPS
-	// fields1["test"] = 10
-	// fields1["MRT"] = MRT
-
-	// fields1 := map[string]interface{}{}
-	// fields1["cpu"] = containerMetricDetails.CPU
-	// fields1["mem"] = containerMetricDetails.Memory
-	// fields1["testf"] = 100
-	// p = influxdb2.NewPoint("metric", containerTag, fields1, time.Now())
-	// writeAPI.WritePoint(p)
-	// writeAPI.WritePoint(context.Background(), p)
-
-	// Force all unwritten data to be sent
-    // writeAPI.Flush()
-    // Ensures background processes finishes
     client.Close()
 	return "Added Entry in DB"
 }
