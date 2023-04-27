@@ -79,7 +79,7 @@ func CreateContainer(containerName string) (CreateContainerReturn) {
 	if e != nil {
 		log.Fatal(e)
 	}
-	portBind := strconv.Itoa(port) + ":8000"
+	portBind := strconv.Itoa(port) + ":80"
 	cmd := exec.Command("docker", "run", "--rm", "-p", portBind, "--cpus=0.2", "--memory=200m", "-d", "jsumermaduru/"+containerName)
 	var out strings.Builder
 	cmd.Stdout = &out
@@ -103,16 +103,17 @@ func CreateContainer(containerName string) (CreateContainerReturn) {
 	return ret
 }
 
-func DeleteContainer(port string) string {
-	fmt.Println("Start: container stop:")
-	fmt.Println(port)
-	portStr, _ := strconv.Atoi(port)
-	contId := storage.GetFromMap(portStr)
+func DeleteContainer(contId string) string {
+	// fmt.Println("Start: container stop:")
+	// fmt.Println(port)
+	// portStr, _ := strconv.Atoi(port)
+	// contId := storage.GetFromMap(portStr)
 	cmdStop := exec.Command("docker", "stop", contId)
 	var outStop strings.Builder
 	cmdStop.Stdout = &outStop
 	fmt.Println("Stopping container")
 	err := cmdStop.Run()
+	fmt.Println("Stopped container " + contId )
 	if err != nil {
 		return "Failed to stop container"
 	}

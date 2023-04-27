@@ -23,7 +23,12 @@ func GetLocustMetrics() (float32, float32) {
 	}
 	var result types.StatsResponse
 	json.Unmarshal(body1, &result)
-	RPS = ( result.Stats[1].RPS + result.Stats[2].RPS ) / 2
-	MRS = (result.Stats[1].MedianResponseType + result.Stats[2].MedianResponseType) / 2
+	if len(result.Stats) == 1 {
+		RPS = 0
+		MRS = 0
+	} else {
+		RPS = ( result.Stats[1].RPS + result.Stats[2].RPS ) / 2
+		MRS = (result.Stats[1].MedianResponseType + result.Stats[2].MedianResponseType) / 2
+	}
 	return RPS, MRS
 }
